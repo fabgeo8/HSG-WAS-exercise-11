@@ -1,10 +1,17 @@
 package tools;
 
 import java.io.IOException;
+
+import org.apache.xalan.lib.sql.ObjectArray;
 import org.gradle.internal.impldep.com.google.common.collect.ImmutableSet;
 import java.util.*;
 import java.util.logging.*;
+import java.util.stream.IntStream;
+
 import com.google.common.collect.Sets;
+
+import cartago.OPERATION;
+import cartago.OpFeedbackParam;
 import ch.unisg.ics.interactions.wot.td.ThingDescription;
 import ch.unisg.ics.interactions.wot.td.ThingDescription.TDFormat;
 import ch.unisg.ics.interactions.wot.td.affordances.ActionAffordance;
@@ -251,9 +258,30 @@ public class Lab extends LearningEnvironment {
       return stateList.indexOf(this.currentState);
     }
 
-    /**
-    * @see {@link LearningEnvironment#getApplicableActions(int)}
-    */
+
+    public Integer[] getPossibleGoalDescription() {
+      int state1 = this.currentState.get(0);
+      int state2 = this.currentState.get(1);
+      Integer[] returner = new Integer[2];
+      returner[0] = state1;
+      returner[1] = state2;
+      return returner;
+    }
+
+    
+    public List<Integer> getFullCurrentState() {
+      return this.currentState;
+    }
+
+    public Integer getStateIndex(List<Integer> observation) {
+      List<List<Integer>> stateList = new ArrayList<>(stateSpace);
+      return IntStream.range(0, stateList.size())
+                .filter(i -> stateList.get(i).equals(observation))
+                .findFirst()
+                .orElse(-1);
+    }
+
+
     @Override
     public List<Integer> getApplicableActions(int state) {
 
@@ -276,25 +304,20 @@ public class Lab extends LearningEnvironment {
       return applicableActions;
     }
 
-    /**
-    * @see {@link LearningEnvironment#performAction(int)}
-    */
+
     @Override
     public void performAction(int action) {
       Action a = actionSpace.get(action);
 
       try {
         a.getRequest().execute();
-        LOGGER.info(a.getRequest().toString());
       } catch (IOException e) {
         LOGGER.severe(e.getMessage());
       }
 
     }
 
-    /**
-    * Creates the action space of the lab
-    */
+
     private void createActionSpace() {
 
       this.affordanceTypes = Arrays.asList(
@@ -348,9 +371,9 @@ public class Lab extends LearningEnvironment {
     private int discretizeLightLevel(Double value) {
       if (value < 50) {
         return 0;
-      } else if (value < 100) {
+      } else if (value < 200) {
         return 1;
-      } else if (value < 300) {
+      } else if (value < 400) {
         return 2;
       }
       return 3;
@@ -374,9 +397,6 @@ public class Lab extends LearningEnvironment {
       return 3;
     }
 
-    /**
-    * Creates the state space of the lab
-    */
     private void createStateSpace() {
       this.stateSpace = Sets.cartesianProduct(
                     ImmutableSet.copyOf(z1Level.keySet()),
@@ -390,9 +410,7 @@ public class Lab extends LearningEnvironment {
     }
 
 
-    /**
-    * Returns the action that is applicable based on a given substate
-    */
+
     private Action getApplicableAction(String stateAxis, Boolean stateValue) {
       return actionSpace.values()
         .stream().filter( v ->
@@ -401,9 +419,7 @@ public class Lab extends LearningEnvironment {
         .findFirst().get();
     }
 
-    /**
-    * Set the applicable actions for each substate
-    */
+
     private void setApplicableActions() {
 
       Action z1LightOnValidAction = getApplicableAction("http://example.org/was#SetZ1Light", true);
