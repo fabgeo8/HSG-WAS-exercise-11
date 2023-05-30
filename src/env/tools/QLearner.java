@@ -16,7 +16,7 @@ public class QLearner extends Artifact {
 
 
     private static final int ITERATIONS = 100;
-    private static final String FILENAME = "file.ser";
+    private static final String FILENAME = "qtables.ser";
 
     private Lab lab; // the lab environment that will be learnt
     private int stateCount; // the number of possible states in the lab environment
